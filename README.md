@@ -27,6 +27,7 @@ $ curl --request GET http://localhost:8000/user # dev
 - `regenerator-runtime` : Allows async/await
   compatibility.
 - `supertest` : Library for testing HTTPS server.
+- `husky` : Improves git hooks.
 
 #### Installation
 
@@ -47,3 +48,7 @@ npm start
 - `git checkout -b {branchName}` : Create a new branch.
 - `git branch -a` : View all branches in local & origin repository
 - `git checkout {branchName}` : Check out an exisitng branch.
+
+#### Webhooks
+
+- [Discord](https://github.com/Falconerd/discord-bot-github)
