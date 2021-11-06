@@ -30,7 +30,6 @@
   },
   "homepage": "https://github.com/echo-location/api#readme",
   "dependencies": {
-    "@babel/preset-env": "^7.16.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
@@ -39,6 +38,7 @@
   "devDependencies": {
     "@babel/core": "^7.16.0",
     "@babel/node": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
     "babel-jest": "^27.3.1",
     "husky": "^7.0.4",
     "jest": "^27.3.1",
