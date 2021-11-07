@@ -37,8 +37,11 @@ $ curl --request GET https://echolocation-api.herokuapp.com/user # prod
 
 ```
 git clone https://github.com/echo-location/api
-npm i
-npm start
+npm i 
+
+npm run dev     # run development
+npm run start   # run production
+
 ```
 
 #### Branches
