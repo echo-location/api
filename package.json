@@ -8,7 +8,7 @@
     "build-babel": "babel src -d build",
     "build": "npm run clean && npm run build-babel",
     "start": "npm run build && node ./build/server.js",
-    "dev": "nodemon --exec npm run start",
+    "dev": "nodemon --watch src/ --exec npm run start",
     "test": "jest --runInBand --detectOpenHandles --verbose",
     "prepare": "husky install"
   },

@@ -16,6 +16,7 @@ app.use(cors(corsOPS));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/", routes.root);
 app.use("/user", routes.user);
 app.use("/item", routes.item);
 
