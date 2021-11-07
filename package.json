@@ -10,8 +10,6 @@
     "start": "npm run build && node ./build/server.js",
     "dev": "nodemon --exec npm run start",
     "test": "jest --runInBand --detectOpenHandles --verbose",
-    "heroku-prebuild": "export NPM_CONFIG_PRODUCTION=false; export NODE_ENV=; NPM_CONFIG_PRODUCTION=false NODE_ENV=development npm install --only=dev --dev",
-    "heroku-postbuild": "export NPM_CONFIG_PRODUCTION=true; export NODE_ENV=production;",
     "prepare": "husky install"
   },
   "jest": {
