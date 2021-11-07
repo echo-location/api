@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "clean": "rm -rf build && mkdir build",
-    "build-babel": "babel lib -d dist",
+    "build-babel": "babel src -d build",
     "build": "npm run clean && npm run build-babel",
-    "start": "npm run build && node dist/index.js",
-    "dev": "nodemon --exec babel-node server.js",
+    "start": "npm run build && node ./build/server.js",
+    "dev": "nodemon --exec npm run start",
     "test": "jest --runInBand --detectOpenHandles --verbose",
     "heroku-prebuild": "export NPM_CONFIG_PRODUCTION=false; export NODE_ENV=; NPM_CONFIG_PRODUCTION=false NODE_ENV=development npm install --only=dev --dev",
     "heroku-postbuild": "export NPM_CONFIG_PRODUCTION=true; export NODE_ENV=production;",
@@ -38,8 +38,8 @@
     "mongoose": "^6.0.12"
   },
   "devDependencies": {
+    "@babel/cli": "^7.16.0",
     "@babel/core": "^7.16.0",
-    "@babel/node": "^7.16.0",
     "@babel/preset-env": "^7.16.0",
     "babel-jest": "^27.3.1",
     "husky": "^7.0.4",
