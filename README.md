@@ -7,6 +7,7 @@ Official API for echoLocation.
 
 ```
 $ curl --request GET http://localhost:8000/user # dev
+$ curl --request GET https://echolocation-api.herokuapp.com/user # prod
 ```
 
 #### Requirements
