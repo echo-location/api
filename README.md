@@ -5,6 +5,8 @@
 
 Official API for echoLocation.
 
+![Heroku](https://heroku-badge.herokuapp.com/?app=echolocation-api)
+
 ```
 $ curl --request GET http://localhost:8000/user # dev
 $ curl --request GET https://echolocation-api.herokuapp.com/user # prod
