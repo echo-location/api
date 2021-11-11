@@ -5,11 +5,7 @@ import routes from "./routes";
 
 // configurations
 // whitelist frontend
-const whitelist = [
-  "http://localhost:3000",
-  "https://echolocation.netlify.app",
-  "https://echolocation-api.herokuapp.com",
-];
+const whitelist = ["http://localhost:3000", "https://echolocation.netlify.app"];
 const corsOPS = {
   origin: whitelist,
   methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
