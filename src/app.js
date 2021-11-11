@@ -4,9 +4,10 @@ import "dotenv/config";
 import routes from "./routes";
 
 // configurations
+// whitelist frontend
 const whitelist = [
   "http://localhost:3000",
-  "http://localhost:8000, http://echolocation-api.herokuapp.com/",
+  "https://echolocation.netlify.app/",
 ];
 const corsOPS = {
   origin: whitelist,
