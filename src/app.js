@@ -7,7 +7,7 @@ import routes from "./routes";
 // whitelist frontend
 const whitelist = [
   "http://localhost:3000",
-  "https://echolocation.netlify.app/",
+  "https://echolocation-api.netlify.app/",
 ];
 const corsOPS = {
   origin: whitelist,
