@@ -4,7 +4,10 @@ import "dotenv/config";
 import routes from "./routes";
 
 // configurations
-const whitelist = ["https://localhost:8000"];
+const whitelist = [
+  "http://localhost:3000",
+  "http://localhost:8000, http://echolocation-api.herokuapp.com/",
+];
 const corsOPS = {
   origin: whitelist,
   methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
