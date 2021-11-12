@@ -22,6 +22,10 @@ const itemSchema = new Schema(
         type: [Number, Number],
       },
     },
+    lost: {
+      type: Boolean,
+      default: true,
+    },
     user: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }

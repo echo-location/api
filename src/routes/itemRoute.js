@@ -9,4 +9,10 @@ router.get("/", async (req, res, next) => {
   res.json({ message: "Collecting all ITEMS!", items: items });
 });
 
+router.get("/lost", async (req, res, next) => {
+  const items = await models.Item.find({ lost: true }).catch(next);
+  console.log(items);
+  res.json({ message: "Collecting lost ITEMS!", items: items });
+});
+
 export default router;
