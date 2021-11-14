@@ -35,7 +35,7 @@ router.post("/", async (req, res, next) => {
   ).then((newUser) => {
     console.info("[INFO]: New user added to database.", newUser);
     newUser.save();
-    res.json({ message: "Creating a USER!", user: newUser });
+    res.status(201).json({ message: "Creating a USER!", user: newUser });
     return newUser;
   });
 });
