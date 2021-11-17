@@ -1,8 +1,14 @@
 import { Router } from "express";
+import mongoose from "mongoose";
+import multiparty from "multiparty";
+import FileType from "file-type";
+import fs from "fs";
+
 import models from "../models";
 import { createItem } from "../utils/helpers/helpers";
+import { getCoords } from "../utils/helpers/gcp";
+import { uploadFile } from "../utils/helpers/s3";
 import { validateParams } from "../middleware/validateParams";
-import mongoose from "mongoose";
 
 const router = Router();
 
@@ -41,7 +47,6 @@ router.post(
   ]),
   async (req, res, next) => {
     const queries = req.query;
-    console.log(queries);
 
     // verifying uid
     const userExists = await models.User.exists({ _id: queries.uid });
@@ -52,16 +57,51 @@ router.post(
       });
     }
 
-    // create item
-    const item = Object.assign(req.body, { user: queries.uid });
+    const form = new multiparty.Form();
+    form.parse(req, async (error, fields, files) => {
+      if (error) {
+        return res.status(500).json({
+          error: error,
+          message: "There was an error with parsing the query!",
+        });
+      }
+      try {
+        const params = JSON.parse(fields.json[0]);
 
-    const newItem = await createItem(queries.uid, item);
-    await newItem.save();
-    res.status(201).json({
-      message: "Creating an item!",
-      user: newItem,
+        // lookup image
+        const path = files.file[0].path;
+        const buffer = fs.readFileSync(path);
+        const type = await FileType.fromBuffer(buffer);
+        const fileName = `${queries.uid}_${Date.now().toString()}`;
+        const imageData = await uploadFile(buffer, fileName, type);
+
+        // lookup coordinates
+        const coords = await getCoords(params.location);
+        const meta = Object.assign({}, coords);
+
+        // create item
+        const item = Object.assign(params, {
+          user: queries.uid,
+          photo: `https://echo-location.s3.us-east-1.amazonaws.com/${fileName}.${type.ext}`,
+          meta: meta,
+        });
+
+        const newItem = await createItem(queries.uid, item);
+        await newItem.save();
+
+        res.status(201).json({
+          message: "Creating an item!",
+          data: imageData,
+          user: newItem,
+        });
+        return newItem;
+      } catch (err) {
+        return res.status(500).json({
+          error: error,
+          message: "There was an error with uploading to S3!",
+        });
+      }
     });
-    return newItem;
   }
 );
 
