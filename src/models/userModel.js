@@ -7,6 +7,12 @@ const userSchema = new Schema(
       unique: true,
       required: true,
     },
+    email: {
+      type: String,
+    },
+    phone: {
+      type: String,
+    },
     items: [
       {
         type: mongoose.Schema.Types.ObjectId,
