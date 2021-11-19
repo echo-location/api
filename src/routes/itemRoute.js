@@ -57,6 +57,7 @@ router.post(
       });
     }
 
+    // parse multipart form
     const form = new multiparty.Form();
     form.parse(req, async (error, fields, files) => {
       if (error) {
@@ -68,37 +69,40 @@ router.post(
       try {
         const params = JSON.parse(fields.json[0]);
 
-        // lookup image
-        const path = files.file[0].path;
-        const buffer = fs.readFileSync(path);
-        const type = await FileType.fromBuffer(buffer);
-        const fileName = `${queries.uid}_${Date.now().toString()}`;
-        const imageData = await uploadFile(buffer, fileName, type);
-
         // lookup coordinates
         const coords = await getCoords(params.location);
         const meta = Object.assign({}, coords);
 
-        // create item
-        const item = Object.assign(params, {
+        let item = Object.assign(params, {
           user: queries.uid,
-          photo: `https://echo-location.s3.us-east-1.amazonaws.com/${fileName}.${type.ext}`,
           meta: meta,
         });
+
+        if ("file" in files) {
+          // lookup image if passed
+          const path = files.file[0].path;
+          const buffer = fs.readFileSync(path);
+          const type = await FileType.fromBuffer(buffer);
+          const fileName = `${queries.uid}_${Date.now().toString()}`;
+          const imageData = await uploadFile(buffer, fileName, type);
+          item = Object.assign(item, {
+            photo: `https://echo-location.s3.us-east-1.amazonaws.com/${fileName}.${type.ext}`,
+          });
+        }
 
         const newItem = await createItem(queries.uid, item);
         await newItem.save();
 
         res.status(201).json({
           message: "Creating an item!",
-          data: imageData,
+          data: imageData || null,
           user: newItem,
         });
         return newItem;
       } catch (err) {
         return res.status(500).json({
           error: error,
-          message: "There was an error with uploading to S3!",
+          message: "There was an error with creating an item!",
         });
       }
     });
@@ -135,6 +139,86 @@ router.put("/:id", async (req, res, next) => {
     }
   );
   return item;
+});
+
+// [PUT] Update an image
+router.put("/:id/upload", async (req, res, next) => {
+  const { id: _id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(_id))
+    return res.status(500).json({ message: "Invalid User Object ID!" });
+
+  const exist = await models.User.exists({ _id: _id }).catch(next);
+  if (!exist)
+    return res.status(404).json({ message: "Can't find specified User." });
+
+  async (req, res, next) => {
+    const queries = req.query;
+
+    // verifying uid
+    const userExists = await models.User.exists({ _id: queries.uid });
+    if (!userExists) {
+      res.status(404).json({
+        message: "Uh oh! This user does not exist!",
+        uid: queries.uid,
+      });
+    }
+
+    // parse multipart form
+    const form = new multiparty.Form();
+    form.parse(req, async (error, fields, files) => {
+      if (error) {
+        return res.status(500).json({
+          error: error,
+          message: "There was an error with parsing the query!",
+        });
+      }
+      try {
+        if (!("file" in files))
+          return res.status(500).json({
+            error: error,
+            message: "No image data found in request body!",
+          });
+
+        // lookup image if passed
+        const path = files.file[0].path;
+        const buffer = fs.readFileSync(path);
+        const type = await FileType.fromBuffer(buffer);
+        const fileName = `${queries.uid}_${Date.now().toString()}`;
+        const imageData = await uploadFile(buffer, fileName, type);
+
+        const item = await models.Item.findByIdAndUpdate(
+          _id,
+          {
+            $set: {
+              photo: `https://echo-location.s3.us-east-1.amazonaws.com/${fileName}.${type.ext}`,
+            },
+          },
+          (error, newItem) => {
+            if (error) {
+              res.status(500).json({
+                message: "Failed to update board.",
+                newItem,
+                success: false,
+              });
+            } else {
+              res.json({
+                message: "Updating a Item by ID!",
+                newItem,
+                success: true,
+              });
+            }
+          }
+        );
+        return item;
+      } catch (err) {
+        return res.status(500).json({
+          error: error,
+          message: "There was an error with updating an item!",
+        });
+      }
+    });
+  };
 });
 
 export default router;
