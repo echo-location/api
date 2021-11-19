@@ -22,6 +22,9 @@ const itemSchema = new Schema(
         type: [Number, Number],
       },
     },
+    photo: {
+      type: String,
+    },
     lost: {
       type: Boolean,
       default: true,
