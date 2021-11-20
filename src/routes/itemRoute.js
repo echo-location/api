@@ -113,9 +113,6 @@ router.post(
 router.put("/:id", async (req, res, next) => {
   const { id: _id } = req.params;
 
-  // [TODO] should only support these
-  const { name, description, date, location, found } = req.body;
-
   if (!mongoose.Types.ObjectId.isValid(_id))
     return res.status(500).json({ message: "Invalid User Object ID!" });
 
@@ -123,9 +120,25 @@ router.put("/:id", async (req, res, next) => {
   if (!exist)
     return res.status(404).json({ message: "Can't find specified User." });
 
+  let newFields = {};
+  const allowedFields = ["name", "description", "date", "location", "lost"];
+  let acceptedFields = false;
+  for (let i = 0; i < allowedFields.length; i++) {
+    if (req.body.hasOwnProperty(allowedFields[i])) {
+      newFields[allowedFields[i]] = req.body[allowedFields[i]];
+      acceptedFields = true;
+    }
+  }
+  if (!acceptedFields) {
+    return res.status(400).json({
+      message: "No valid fields found.",
+      success: false,
+    });
+  }
+
   const item = await models.Item.findByIdAndUpdate(
     _id,
-    { $set: req.body },
+    { $set: newFields },
     (error, newItem) => {
       if (error) {
         res.status(500).json({
