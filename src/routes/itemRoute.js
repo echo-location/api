@@ -34,6 +34,68 @@ router.get(
   }
 );
 
+router.get("/search",
+  validateParams([
+    {
+      param_key: "q",
+      required: false,
+      type: "string",
+      validator_functions: [],
+    }, {
+      param_key: "lost",
+      required: false,
+      type: "boolean",
+      validator_functions: [],
+    }, {
+      param_key: "start_date",
+      required: false,
+      type: "string",
+      validator_functions: [(param) => isDateValid(param)],
+    }, {
+      param_key: "end_date",
+      required: false,
+      type: "string",
+      validator_functions: [(param) => isDateValid(param)],
+    }, {
+      param_key: "photo",
+      required: false,
+      type: "boolean",
+      validator_functions: [],
+    },
+  ]),
+  async (req, res, next) => {
+    const queries = req.query;
+    console.log(queries);
+    let searchFilters = {};
+    // TODO add to Search Filter, maybe need to change validateParams to only accept params in array
+    // or need an array like below
+    for (const param in queries) {
+      if (param === "q") {
+        searchFilters.name = new RegExp(queries.q); // TODO: escape string or find other way
+      }else if (param === 'start_date') { searchFilters[param] = queries[param]; }
+       else if (param === 'start_date') {
+        if (searchFilters.date === undefined) {
+          searchFilters.date = { $gte: new Date() }; // prob need helper func to convert dateString to date
+        } else {
+          searchFilters[date][$gte] = new Date();
+        }
+      }
+      else if (param === 'end_date') {
+        if (searchFilters.date === undefined) {
+          searchFilters.date = { $lte: new Date() };
+        } else {
+          searchFilters[date][$lte] = new Date();
+        }
+      }
+      
+      else if (param === 'start_date') { searchFilters[param] = queries[param]; }
+    }
+
+    let items = await models.Item.find(searchFilters).catch(next); // .where() maybe?
+    res.json({ message: "Searched for items!", items: items });
+  }
+);
+
 // [POST] Create a new item
 router.post(
   "/create",
