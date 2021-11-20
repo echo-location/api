@@ -77,14 +77,14 @@ router.post(
           user: queries.uid,
           meta: meta,
         });
-
+        let imageData = null;
         if ("file" in files) {
           // lookup image if passed
           const path = files.file[0].path;
           const buffer = fs.readFileSync(path);
           const type = await FileType.fromBuffer(buffer);
           const fileName = `${queries.uid}_${Date.now().toString()}`;
-          const imageData = await uploadFile(buffer, fileName, type);
+          imageData = await uploadFile(buffer, fileName, type);
           item = Object.assign(item, {
             photo: `https://echo-location.s3.us-east-1.amazonaws.com/${fileName}.${type.ext}`,
           });
@@ -122,14 +122,14 @@ router.put("/:id", async (req, res, next) => {
 
   let newFields = {};
   const allowedFields = ["name", "description", "date", "location", "lost"];
-  let acceptedFields = false;
+  let acceptedFieldsPresent = false;
   for (let i = 0; i < allowedFields.length; i++) {
     if (req.body.hasOwnProperty(allowedFields[i])) {
       newFields[allowedFields[i]] = req.body[allowedFields[i]];
-      acceptedFields = true;
+      acceptedFieldsPresent = true;
     }
   }
-  if (!acceptedFields) {
+  if (!acceptedFieldsPresent) {
     return res.status(400).json({
       message: "No valid fields found.",
       success: false,
