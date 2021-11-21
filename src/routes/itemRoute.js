@@ -8,6 +8,7 @@ import models from "../models";
 import { createItem } from "../utils/helpers/helpers";
 import { getCoords } from "../utils/helpers/gcp";
 import { uploadFile } from "../utils/helpers/s3";
+import { isDateValid } from "../utils/helpers/validDateString";
 import { validateParams } from "../middleware/validateParams";
 
 const router = Router();
@@ -31,6 +32,60 @@ router.get(
       items = await models.Item.find().catch(next);
     else items = await models.Item.find({ lost: queries.lost }).catch(next);
     res.json({ message: "Collecting all ITEMS!", items: items });
+  }
+);
+
+router.get("/search",
+  validateParams([
+    {
+      param_key: "q",
+      // required: false,
+      type: "string",
+      // validator_functions: [],
+    }, {
+      param_key: "lost",
+      type: "boolean", //  prob need to validate this because FALSE and TRUE can't be cast to booleans
+    }, {
+      param_key: "start_date",
+      type: "string",
+      validator_functions: [(param) => isDateValid(param)],
+    }, {
+      param_key: "end_date",
+      type: "string",
+      validator_functions: [(param) => isDateValid(param)],
+    }, {
+      param_key: "photo",
+      type: "boolean",
+    },
+  ]),
+  async (req, res, next) => {
+    const queries = req.query;
+    console.log(queries);
+    let searchFilters = {};
+    // TODO add to Search Filter, maybe need to change validateParams to only accept params in array
+    // or need an array like below
+    for (const param in queries) {
+      if (param === "q") {
+        searchFilters.name = {}; // $text/search https://docs.mongodb.com/manual/reference/operator/query/text/
+      } else if (param === 'lost') {
+        searchFilters.lost = queries.lost; // queries['lost']
+      } else if (param === 'photo') {
+        searchFilters.photo = { $regex: /./ }; // > 0 char // $exists: true,
+      } else if (param === 'start_date') {
+        if (searchFilters.date === undefined) {
+          searchFilters.date = {};
+        }
+        searchFilters.date.$gte = queries.start_date;
+      } else if (param === 'end_date') {
+        if (searchFilters.date === undefined) {
+          searchFilters.date = {};
+        }
+        searchFilters.date.$lte = queries.end_date;
+      } // else {}
+    }
+
+    let items = await models.Item.find(searchFilters).catch(next); // .where() maybe?
+    res.json({ message: "Searched for items!", items: items });
   }
 );
 
@@ -77,14 +132,14 @@ router.post(
           user: queries.uid,
           meta: meta,
         });
-
+        let imageData = null;
         if ("file" in files) {
           // lookup image if passed
           const path = files.file[0].path;
           const buffer = fs.readFileSync(path);
           const type = await FileType.fromBuffer(buffer);
           const fileName = `${queries.uid}_${Date.now().toString()}`;
-          const imageData = await uploadFile(buffer, fileName, type);
+          imageData = await uploadFile(buffer, fileName, type);
           item = Object.assign(item, {
             photo: `https://echo-location.s3.us-east-1.amazonaws.com/${fileName}.${type.ext}`,
           });
@@ -113,9 +168,6 @@ router.post(
 router.put("/:id", async (req, res, next) => {
   const { id: _id } = req.params;
 
-  // [TODO] should only support these
-  const { name, description, date, location, found } = req.body;
-
   if (!mongoose.Types.ObjectId.isValid(_id))
     return res.status(500).json({ message: "Invalid User Object ID!" });
 
@@ -123,9 +175,25 @@ router.put("/:id", async (req, res, next) => {
   if (!exist)
     return res.status(404).json({ message: "Can't find specified User." });
 
+  let newFields = {};
+  const allowedFields = ["name", "description", "date", "location", "lost"];
+  let acceptedFieldsPresent = false;
+  for (let i = 0; i < allowedFields.length; i++) {
+    if (req.body.hasOwnProperty(allowedFields[i])) {
+      newFields[allowedFields[i]] = req.body[allowedFields[i]];
+      acceptedFieldsPresent = true;
+    }
+  }
+  if (!acceptedFieldsPresent) {
+    return res.status(400).json({
+      message: "No valid fields found.",
+      success: false,
+    });
+  }
+
   const item = await models.Item.findByIdAndUpdate(
     _id,
-    { $set: req.body },
+    { $set: newFields },
     (error, newItem) => {
       if (error) {
         res.status(500).json({
