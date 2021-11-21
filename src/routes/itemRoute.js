@@ -8,6 +8,7 @@ import models from "../models";
 import { createItem } from "../utils/helpers/helpers";
 import { getCoords } from "../utils/helpers/gcp";
 import { uploadFile } from "../utils/helpers/s3";
+import { isDateValid } from "../utils/helpers/validDateString";
 import { validateParams } from "../middleware/validateParams";
 
 const router = Router();
@@ -33,26 +34,6 @@ router.get(
     res.json({ message: "Collecting all ITEMS!", items: items });
   }
 );
-
-const isDateValid = (dateString) => {
-  const dateStringRegex = /^\d{4}-\d\d-\d\d$/
-  if (dateStringRegex.test(dateString)) {
-    let [year, month, day] = dateString.split('-');
-    year = parseInt(year, 10);
-    month = parseInt(month, 10);
-    day = parseInt(day, 10);
-    if (month > 0 && month < 13 && day > 0 && day < 32 && year >= 1969) { // UTC-N timezones' (eg PT) start year is in 1969
-      // Make sure date is valid. eg. '2021-31-11' or Nov 31st is invalid
-      // const date = new Date(dateString); // UTC but MDN discourages this parsing because it's inconsistent
-      // const date = new Date(Date.UTC(year, month - 1, day)); // UTC
-      const date = new Date(year, month - 1, day); // Local Time but at midnight so PT is
-      if (date.getUTCDate() === day && date.getUTCMonth() === month - 1 && date.getUTCFullYear() === year) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
 
 router.get("/search",
   validateParams([
@@ -93,19 +74,19 @@ router.get("/search",
       if (param === "q") {
         searchFilters.name = {}; // $text/search https://docs.mongodb.com/manual/reference/operator/query/text/
       } else if (param === 'lost') {
-        searchFilters.lost = queries[lost];
+        searchFilters.lost = queries.lost; // queries['lost']
       } else if (param === 'photo') {
         searchFilters.photo = { $regex: /./ }; // > 0 char // $exists: true,
       } else if (param === 'start_date') {
         if (searchFilters.date === undefined) {
           searchFilters.date = {};
         }
-        searchFilters[date][$gte] = queries.start_date;
+        searchFilters.date.$gte = queries.start_date;
       } else if (param === 'end_date') {
         if (searchFilters.date === undefined) {
           searchFilters.date = {};
         }
-        searchFilters[date][$lte] = queries.end_date;
+        searchFilters.date.$lte = queries.end_date;
       } //else {}
     }
 
