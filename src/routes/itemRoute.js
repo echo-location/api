@@ -91,24 +91,22 @@ router.get("/search",
     // or need an array like below
     for (const param in queries) {
       if (param === "q") {
-        searchFilters.name = new RegExp(queries.q); // TODO: escape string or find other way
-      }else if (param === 'start_date') { searchFilters[param] = queries[param]; }
-       else if (param === 'start_date') {
+        searchFilters.name = {}; // $text/search https://docs.mongodb.com/manual/reference/operator/query/text/
+      } else if (param === 'lost') {
+        searchFilters.lost = queries[lost];
+      } else if (param === 'photo') {
+        searchFilters.photo = { $regex: /./ }; // > 0 char // $exists: true,
+      } else if (param === 'start_date') {
         if (searchFilters.date === undefined) {
-          searchFilters.date = { $gte: new Date() }; // prob need helper func to convert dateString to date
-        } else {
-          searchFilters[date][$gte] = new Date();
+          searchFilters.date = {};
         }
-      }
-      else if (param === 'end_date') {
+        searchFilters[date][$gte] = queries.start_date;
+      } else if (param === 'end_date') {
         if (searchFilters.date === undefined) {
-          searchFilters.date = { $lte: new Date() };
-        } else {
-          searchFilters[date][$lte] = new Date();
+          searchFilters.date = {};
         }
-      }
-      
-      else if (param === 'start_date') { searchFilters[param] = queries[param]; }
+        searchFilters[date][$lte] = queries.end_date;
+      } //else {}
     }
 
     let items = await models.Item.find(searchFilters).catch(next); // .where() maybe?
