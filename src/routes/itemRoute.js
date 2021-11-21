@@ -227,7 +227,7 @@ router.put("/:id", async (req, res, next) => {
     const newItem = await models.Item.findByIdAndUpdate(_id, newFields, { new: true, });
     if (!newItem) {
       return res.status(404).json({
-        message: "Item Not Found.", newItem, success: false,
+        message: "Item not found.", newItem, success: false,
       });
     }
     return res.json({ message: "Updating an Item by ID!", newItem, success: true });
@@ -297,7 +297,7 @@ router.put("/:id/upload", async (req, res, next) => {
 
         if (!newItem) {
           res.status(404).json({
-            message: "Item Not Found.",
+            message: "Item not found.",
             newItem,
             success: false,
           });
@@ -310,8 +310,9 @@ router.put("/:id/upload", async (req, res, next) => {
         }
       } catch (err) {
         return res.status(500).json({
-          error: err,
           message: "There was an error with updating an item!",
+          error: err,
+          success: false,
         });
       }
     });

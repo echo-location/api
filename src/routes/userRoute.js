@@ -51,22 +51,25 @@ router.put("/:id", async (req, res, next) => {
   const exist = await models.User.exists({ _id: _id }).catch(next);
   if (!exist)
     return res.status(404).json({ message: "Can't find specified User." });
-
-  const user = await models.User.findByIdAndUpdate(
-    _id,
-    { $set: { username: username } },
-    (error, newUser) => {
-      if (error) {
-        res.status(500).json({
-          message: "Failed to update board.",
-          newUser,
-          success: false,
-        });
-      } else {
-        res.json({ message: "Updating a USER by ID!", newUser, success: true });
-      }
+  try {
+    const newUser = await models.User.findByIdAndUpdate(
+      _id, { username: username }, { new: true });
+    if (!newUser) {
+      return res.status(404).json({
+        message: "User not found.",
+        newUser,
+        success: false,
+      });
     }
-  );
+    return res.json({ message: "Updating a USER by ID!", newUser, success: true });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Failed to update user.",
+      // newUser,
+      error: err,
+      success: false,
+    });
+  }
 });
 
 // [DELETE] Delete a user
