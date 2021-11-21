@@ -15,13 +15,11 @@ const validateParams = (validation) => {
               `Uh oh! Your parameter ${param.param_key} is of type ` +
               `${typeof parseQuery(reqParam)} but it should be ${param.type}.`,
           });
-        } else {
-          if (!runValidators(reqParam, param)) {
-            return res.status(400).send({
-              status: 400,
-              result: `Uh oh! Our validation test(s) failed for ${param.param_key}.`,
-            });
-          }
+        } else if (param.hasOwnProperty('validator_functions') && !runValidators(reqParam, param)) {
+          return res.status(400).send({
+            status: 400,
+            result: `Uh oh! Our validation test(s) failed for ${param.param_key}.`,
+          });
         }
       } else if (param.required) {
         return res.status(400).send({

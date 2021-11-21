@@ -39,29 +39,23 @@ router.get("/search",
   validateParams([
     {
       param_key: "q",
-      required: false,
+      // required: false,
       type: "string",
-      validator_functions: [],
+      // validator_functions: [],
     }, {
       param_key: "lost",
-      required: false,
-      type: "boolean",
-      validator_functions: [],
+      type: "boolean", //  prob need to validate this because FALSE and TRUE can't be cast to booleans
     }, {
       param_key: "start_date",
-      required: false,
       type: "string",
       validator_functions: [(param) => isDateValid(param)],
     }, {
       param_key: "end_date",
-      required: false,
       type: "string",
       validator_functions: [(param) => isDateValid(param)],
     }, {
       param_key: "photo",
-      required: false,
       type: "boolean",
-      validator_functions: [],
     },
   ]),
   async (req, res, next) => {
@@ -87,7 +81,7 @@ router.get("/search",
           searchFilters.date = {};
         }
         searchFilters.date.$lte = queries.end_date;
-      } //else {}
+      } // else {}
     }
 
     let items = await models.Item.find(searchFilters).catch(next); // .where() maybe?
