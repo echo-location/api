@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 import User from "./userModel";
 import Item from "./itemModel";
 
