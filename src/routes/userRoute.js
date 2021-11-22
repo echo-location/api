@@ -27,17 +27,34 @@ router.get("/:id", async (req, res, next) => {
 
 // [POST] Create a new user
 router.post("/", async (req, res, next) => {
-  console.log(req.body);
-  return models.User.create(
-    new models.User({
-      username: req.body.username,
-    })
-  ).then((newUser) => {
-    console.info("[INFO]: New user added to database.", newUser);
-    newUser.save();
-    res.status(201).json({ message: "Creating a USER!", user: newUser });
-    return newUser;
-  });
+  //  await mongoose.collection.db.dropCollection('User');
+  // console.log(req.body);
+  // return;
+  try {
+    const newUser = await models.User.create(
+      new models.User({
+        username: req.body.username,
+        // email: Math.random().toString(),
+      })
+    );
+    if (newUser) {
+      console.info("[INFO]: New user added to database.", newUser);
+      // newUser.save();
+      return res.status(201).json({ message: "Creating a USER!", user: newUser });
+    }
+    return res.status(500).json({
+      message: "There was an error with creating a user!",
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      // console.log(err.index, err.code, err.keyPattern, err.keyValue);
+      return res.status(400).json({ message: "Username already taken." });
+    }
+    return res.status(500).json({
+      error: err,
+      message: "There was an error with creating a user!",
+    });
+  }
 });
 
 // [PUT] Update a user's properties (by ID)
