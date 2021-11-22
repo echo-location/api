@@ -33,7 +33,8 @@ const validateParams = (validation) => {
 };
 
 const isPresent = (param, obj) => {
-  return Object.keys(param).includes(obj.param_key);
+  return param.hasOwnProperty(obj.param_key); // doesn't need to make array
+  // return Object.keys(param).includes(obj.param_key);
 };
 
 const getType = (param, obj) => {
@@ -46,4 +47,4 @@ const runValidators = (param, obj) => {
   return true;
 };
 
-export { validateParams };
+export { validateParams, getType, runValidators };

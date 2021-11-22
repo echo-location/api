@@ -10,6 +10,7 @@ import { getCoords } from "../utils/helpers/gcp";
 import { uploadFile } from "../utils/helpers/s3";
 import { isDateValid } from "../utils/helpers/validDateString";
 import { validateParams } from "../middleware/validateParams";
+import { validateBody } from "../middleware/validateRequestBody";
 
 const router = Router();
 
@@ -171,74 +172,66 @@ router.post(
 );
 
 // [PUT] Update an existing item
-router.put("/:id", async (req, res, next) => {
-  const { id: _id } = req.params;
+router.put("/:id",
+  validateBody(
+    [{ field_key: "name", type: "string" },
+    { field_key: "description", type: "string" },
+    { field_key: "date", type: "string", validator_functions: [(dateString) => isDateValid(dateString)],},
+    { field_key: "location", type: "string" },
+    { field_key: "lost", type: "boolean" }]
+  ),
+  async (req, res, next) => {
+    const { id: _id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(_id))
-    return res.status(500).json({ message: "Invalid User Object ID!" });
+    if (!mongoose.Types.ObjectId.isValid(_id))
+      return res.status(500).json({ message: "Invalid User Object ID!" });
 
-  /**
-   * This checks User ID but query below expects an Item ID.
-   * const exist = await models.User.exists({ _id: _id }).catch(next);
-   * if (!exist)
-   *  return res.status(404).json({ message: "Can't find specified User." });
-   */
+    /**
+     * This checks User ID but query below expects an Item ID.
+     * const exist = await models.User.exists({ _id: _id }).catch(next);
+     * if (!exist)
+     *  return res.status(404).json({ message: "Can't find specified User." });
+     */
 
-  let newFields = {};
-  const allowedFields = ["name", "description", "date", "location", "lost"];
-  let acceptedFieldsPresent = false;
-  for (let i = 0; i < allowedFields.length; i++) {
-    if (req.body.hasOwnProperty(allowedFields[i])) {
-      newFields[allowedFields[i]] = req.body[allowedFields[i]];
-      acceptedFieldsPresent = true;
-    }
-  }
-  if (!acceptedFieldsPresent) {
-    return res.status(400).json({
-      message: "No valid fields found.",
-      success: false,
-    });
-  }
+    /**
+     * callback way
+     * 
+     * const item = models.Item.findByIdAndUpdate(
+     *   _id,
+     *   newFields,
+     *   { new: true, },
+     *   (error, newItem) => { // https://mongoosejs.com/docs/queries.html#queries-are-not-promises
+     *     // console.log(error, newItem);
+     *     if (!newItem || error) {
+     *       res.status(500).json({
+     *         message: "Failed to update item.",
+     *         newItem,
+     *         success: false,
+     *       });
+     *     } else {
+     *       res.json({ message: "Updating a Item by ID!", newItem, success: true });
+     *     }
+     *   }
+     * );
+     *  // return item; // calls query again = 3rd time if that was possible.
+     */
 
-  /**
-   * callback way
-   * 
-   * const item = models.Item.findByIdAndUpdate(
-   *   _id,
-   *   newFields,
-   *   { new: true, },
-   *   (error, newItem) => { // https://mongoosejs.com/docs/queries.html#queries-are-not-promises
-   *     // console.log(error, newItem);
-   *     if (!newItem || error) {
-   *       res.status(500).json({
-   *         message: "Failed to update item.",
-   *         newItem,
-   *         success: false,
-   *       });
-   *     } else {
-   *       res.json({ message: "Updating a Item by ID!", newItem, success: true });
-   *     }
-   *   }
-   * );
-   *  // return item; // calls query again = 3rd time if that was possible.
-   */
-
-  try {
-    const newItem = await models.Item.findByIdAndUpdate(_id, newFields, { new: true, });
-    if (!newItem) {
-      return res.status(404).json({
-        message: "Item not found.", newItem, success: false,
+    try {
+      const newItem = await models.Item.findByIdAndUpdate(_id, req.body, { new: true, });
+      if (!newItem) {
+        return res.status(404).json({
+          message: "Item not found.", newItem, success: false,
+        });
+      }
+      return res.json({ message: "Updating an Item by ID!", newItem, success: true });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Failed to update item.",
+        newItem: undefined,
+        success: false,
       });
     }
-    return res.json({ message: "Updating an Item by ID!", newItem, success: true });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Failed to update item.",
-      newItem,
-      success: false,
-    });
-  }
-});
+  });
 
 // [PUT] Update an image
 router.put("/:id/upload", async (req, res, next) => {
