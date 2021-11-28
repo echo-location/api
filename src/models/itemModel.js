@@ -4,7 +4,7 @@ const itemSchema = new Schema(
   {
     name: {
       type: String,
-      unique: true,
+      unique: false,
       required: true,
     },
     description: {
@@ -34,5 +34,6 @@ const itemSchema = new Schema(
   { timestamps: true }
 );
 
+itemSchema.index({ "name": "text" });
 const Item = mongoose.model("Item", itemSchema);
 export default Item;

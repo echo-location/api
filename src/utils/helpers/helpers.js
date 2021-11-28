@@ -48,15 +48,22 @@ const repopulate = async () => {
   const i3 = await createItem(u2._id, {
     name: "orange",
     description: "A boring fruit.",
-    location: "In some basic girl's stomach.",
+    location: "In someone's stomach.",
     user: u2,
   });
 
+  const i4 = await createItem(u2._id, {
+    name: "orange",
+    description: "A great fruit.",
+    location: "In someone else's stomach.",
+    user: u2,
+  });
   await u1.save();
   await u2.save();
   await i1.save();
   await i2.save();
   await i3.save();
+  await i4.save();
 };
 
 export { createUser, createItem, repopulate };

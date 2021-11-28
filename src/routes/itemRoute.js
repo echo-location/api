@@ -73,7 +73,9 @@ router.get("/search",
     // or need an array like below
     for (const param in queries) {
       if (param === "q") {
-        searchFilters.name = {}; // $text/search https://docs.mongodb.com/manual/reference/operator/query/text/
+        searchFilters.$text = { // searches name field bc that's only field text indexed
+          $search: queries.q,
+        };
       } else if (param === 'lost') {
         searchFilters.lost = queries.lost; // queries['lost']
       } else if (param === 'photo') {
@@ -88,10 +90,23 @@ router.get("/search",
           searchFilters.date = {};
         }
         searchFilters.date.$lte = queries.end_date;
-      } // else {}
+      }
     }
 
     let items = await models.Item.find(searchFilters).catch(next); // .where() maybe?
+    if (Array.isArray(items) && items.length === 0 && searchFilters.hasOwnProperty('$text')) {
+      // try searching with regex because $searching app doesn't match apple but regex would
+      try {
+        // escape special regex chars. $& means the whole matched string
+        const newRegex = new RegExp(queries.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        searchFilters.name = { $regex: newRegex, $options: 'i' };
+      } catch {
+        return res.json({ message: "Searched for items!", items: items });
+      }
+      delete searchFilters.$text;
+      console.log(searchFilters);
+      items = await models.Item.find(searchFilters).catch(next);
+    }
     res.json({ message: "Searched for items!", items: items });
   }
 );
@@ -176,7 +191,7 @@ router.put("/:id",
   validateBody(
     [{ field_key: "name", type: "string" },
     { field_key: "description", type: "string" },
-    { field_key: "date", type: "string", validator_functions: [(dateString) => isDateValid(dateString)],},
+    { field_key: "date", type: "string", validator_functions: [(dateString) => isDateValid(dateString)], },
     { field_key: "location", type: "string" },
     { field_key: "lost", type: "boolean" }]
   ),
@@ -238,7 +253,7 @@ router.put("/:id/upload", async (req, res, next) => {
   const { id: _id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(_id))
-    return res.status(500).json({ message: "Invalid User Object ID!" });
+    return res.status(400).json({ message: "Invalid User Object ID!" });
 
   const exist = await models.User.exists({ _id: _id }).catch(next);
   if (!exist)
@@ -310,6 +325,30 @@ router.put("/:id/upload", async (req, res, next) => {
       }
     });
   };
+});
+
+// [DELETE] Delete an item
+router.delete("/:id", async (req, res, next) => {
+  // TODO: authenticate request
+
+  const { id: _id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(_id))
+    return res.status(400).json({ message: "Invalid Item Object ID!" });
+  try {
+    const item = await models.Item.findOneAndDelete({ _id: _id });
+    if (!item) {
+      return res.status(404).json({ message: "Item not found.", success: false, });
+    }
+    return res.json({ message: "Deleted item.", success: true });
+  }
+  catch (err) {
+    return res.status(500).json({
+      message: "There was an error with deleting the item.",
+      error: err,
+      success: false,
+    });
+  }
 });
 
 export default router;
