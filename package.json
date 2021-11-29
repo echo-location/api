@@ -38,7 +38,9 @@
     "file-type": "^16.5.3",
     "firebase": "^9.5.0",
     "mongoose": "^6.0.12",
-    "multiparty": "^4.2.2"
+    "multiparty": "^4.2.2",
+    "passport": "^0.5.0",
+    "passport-oauth2": "^1.6.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
