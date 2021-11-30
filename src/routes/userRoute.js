@@ -1,6 +1,8 @@
 import { Router } from "express";
 import models from "../models";
 import mongoose from "mongoose";
+import { validateBody } from "../middleware/validateRequestBody";
+
 const router = Router();
 
 // [GET] Retrieve all users
@@ -60,36 +62,40 @@ router.post("/", async (req, res, next) => {
 });
 
 // [PUT] Update a user's properties (by ID)
-router.put("/:id", async (req, res, next) => {
-  const { id: _id } = req.params;
-  const { username, phone, email } = req.body;
+router.put("/:id", validateBody([
+  { field_key: "username", type: "string" },
+  { field_key: "phone", type: "string" },
+  { field_key: "email", type: "string", }
+  ,]), async (req, res, next) => {
+    const { id: _id } = req.params;
+    // const { username, phone, email } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(_id))
-    return res.status(500).json({ message: "Invalid User Object ID!", success: false, });
+    if (!mongoose.Types.ObjectId.isValid(_id))
+      return res.status(500).json({ message: "Invalid User Object ID!", success: false, });
 
-  const exist = await models.User.exists({ _id: _id }).catch(next);
-  if (!exist)
-    return res.status(404).json({ message: "Can't find specified User.", success: false, });
-  try {
-    const newUser = await models.User.findByIdAndUpdate(
-      _id, { username: username, phone: phone, email: email }, { new: true });
-    if (!newUser) {
-      return res.status(404).json({
-        message: "User not found.",
-        newUser,
+    const exist = await models.User.exists({ _id: _id }).catch(next);
+    if (!exist)
+      return res.status(404).json({ message: "Can't find specified User.", success: false, });
+    try {
+      const newUser = await models.User.findByIdAndUpdate(
+        _id, req.body, { new: true });
+      if (!newUser) {
+        return res.status(404).json({
+          message: "User not found.",
+          newUser,
+          success: false,
+        });
+      }
+      return res.json({ message: "Updating a USER by ID!", newUser, success: true });
+    } catch (err) {
+      return res.status(500).json({
+        message: "Failed to update user.",
+        // newUser,
+        error: err,
         success: false,
       });
     }
-    return res.json({ message: "Updating a USER by ID!", newUser, success: true });
-  } catch (err) {
-    return res.status(500).json({
-      message: "Failed to update user.",
-      // newUser,
-      error: err,
-      success: false,
-    });
-  }
-});
+  });
 
 // [DELETE] Delete a user
 router.delete("/:id", async (req, res, next) => {
@@ -98,7 +104,7 @@ router.delete("/:id", async (req, res, next) => {
     return res.status(500).json({ message: "Invalid User Object ID!", success: false });
 
   const user = await models.User.deleteOne({ _id: req.params.id }).catch(next);
-  res.status(204).json({ message: "Deleting a USER by ID!", user: user });
+  res.status(204).json({ message: "Deleting a USER by ID!", user: user, success: true });
 });
 
 export default router;
