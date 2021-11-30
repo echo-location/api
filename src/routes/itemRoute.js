@@ -36,78 +36,79 @@ router.get(
   }
 );
 
-router.get("/search",
+router.get(
+  "/search",
   validateParams([
     {
       param_key: "q",
-      // required: false,
       type: "string",
-      // validator_functions: [],
-    }, {
+    },
+    {
       param_key: "lost",
-      // required: false,
       type: "boolean",
-      // validator_functions: [],
-    }, {
+    },
+    {
       param_key: "start_date",
-      // required: false,
       type: "string",
       // validator_functions: [(param) => isDateValid(param)],
-    }, {
+    },
+    {
       param_key: "end_date",
-      //required: false,
       type: "string",
       validator_functions: [(param) => isDateValid(param)],
-    }, {
+    },
+    {
       param_key: "photo",
-      required: false,
       type: "boolean",
-      validator_functions: [],
     },
   ]),
   async (req, res, next) => {
     const queries = req.query;
     console.log(queries);
+
     let searchFilters = {};
-    // TODO add to Search Filter, maybe need to change validateParams to only accept params in array
-    // or need an array like below
     for (const param in queries) {
-      if (param === "q") {
-        searchFilters.$text = { // searches name field bc that's only field text indexed
-          $search: queries.q,
-        };
-      } else if (param === 'lost') {
-        searchFilters.lost = queries.lost; // queries['lost']
-      } else if (param === 'photo') {
-        searchFilters.photo = { $regex: /./ }; // > 0 char // $exists: true,
-      } else if (param === 'start_date') {
-        if (searchFilters.date === undefined) {
-          searchFilters.date = {};
-        }
-        searchFilters.date.$gte = queries.start_date;
-      } else if (param === 'end_date') {
-        if (searchFilters.date === undefined) {
-          searchFilters.date = {};
-        }
-        searchFilters.date.$lte = queries.end_date;
+      switch (param) {
+        case "q":
+          searchFilters.$text = {
+            $search: queries.q,
+          };
+          break;
+        case "lost":
+          searchFilters.lost = queries.lost;
+          break;
+        case "photo":
+          searchFilters.photo = queries.photo === "true" ? { $regex: /./ } : {};
+          break;
+        case "start_date":
+          if (!(date in searchFilters)) searchFilters.date = {};
+          searchFilters.date.$gte = queries.start_date;
+          break;
+        case "end_date":
+          if (!(date in searchFilters)) searchFilters.date = {};
+          searchFilters.date.$lte = queries.end_date;
       }
     }
 
-    let items = await models.Item.find(searchFilters).catch(next); // .where() maybe?
-    if (Array.isArray(items) && items.length === 0 && searchFilters.hasOwnProperty('$text')) {
-      // try searching with regex because $searching app doesn't match apple but regex would
+    let items = await models.Item.find(searchFilters).catch(next);
+
+    // check for special regex exception
+    if (items === [] && "$text" in searchFilters) {
       try {
         // escape special regex chars. $& means the whole matched string
-        const newRegex = new RegExp(queries.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-        searchFilters.name = { $regex: newRegex, $options: 'i' };
+        const re = new RegExp(queries.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+        searchFilters.name = { $regex: re, $options: "i" };
+        delete searchFilters.$text;
+        items = await models.Item.find(searchFilters).catch(next);
       } catch {
-        return res.json({ message: "Searched for items!", items: items });
+        return res.status(500).json({
+          message: "Uh oh! Escaping regex characters for text query failed!",
+          status: false,
+          items: items,
+        });
       }
-      delete searchFilters.$text;
-      console.log(searchFilters);
-      items = await models.Item.find(searchFilters).catch(next);
     }
-    res.json({ message: "Searched for items!", items: items });
+    res.status(200).json({ message: "Searched for items!", items: items });
   }
 );
 
@@ -187,14 +188,19 @@ router.post(
 );
 
 // [PUT] Update an existing item
-router.put("/:id",
-  validateBody(
-    [{ field_key: "name", type: "string" },
+router.put(
+  "/:id",
+  validateBody([
+    { field_key: "name", type: "string" },
     { field_key: "description", type: "string" },
-    { field_key: "date", type: "string", validator_functions: [(dateString) => isDateValid(dateString)], },
+    {
+      field_key: "date",
+      type: "string",
+      validator_functions: [(dateString) => isDateValid(dateString)],
+    },
     { field_key: "location", type: "string" },
-    { field_key: "lost", type: "boolean" }]
-  ),
+    { field_key: "lost", type: "boolean" },
+  ]),
   async (req, res, next) => {
     const { id: _id } = req.params;
 
@@ -210,7 +216,7 @@ router.put("/:id",
 
     /**
      * callback way
-     * 
+     *
      * const item = models.Item.findByIdAndUpdate(
      *   _id,
      *   newFields,
@@ -232,13 +238,21 @@ router.put("/:id",
      */
 
     try {
-      const newItem = await models.Item.findByIdAndUpdate(_id, req.body, { new: true, });
+      const newItem = await models.Item.findByIdAndUpdate(_id, req.body, {
+        new: true,
+      });
       if (!newItem) {
         return res.status(404).json({
-          message: "Item not found.", newItem, success: false,
+          message: "Item not found.",
+          newItem,
+          success: false,
         });
       }
-      return res.json({ message: "Updating an Item by ID!", newItem, success: true });
+      return res.json({
+        message: "Updating an Item by ID!",
+        newItem,
+        success: true,
+      });
     } catch (error) {
       return res.status(500).json({
         message: "Failed to update item.",
@@ -246,7 +260,8 @@ router.put("/:id",
         success: false,
       });
     }
-  });
+  }
+);
 
 // [PUT] Update an image
 router.put("/:id/upload", async (req, res, next) => {
@@ -301,7 +316,8 @@ router.put("/:id/upload", async (req, res, next) => {
             photo: `https://echo-location.s3.us-east-1.amazonaws.com/${fileName}.${type.ext}`,
             // },
           },
-          { new: true, });
+          { new: true }
+        );
 
         if (!newItem) {
           res.status(404).json({
@@ -338,11 +354,12 @@ router.delete("/:id", async (req, res, next) => {
   try {
     const item = await models.Item.findOneAndDelete({ _id: _id });
     if (!item) {
-      return res.status(404).json({ message: "Item not found.", success: false, });
+      return res
+        .status(404)
+        .json({ message: "Item not found.", success: false });
     }
     return res.json({ message: "Deleted item.", success: true });
-  }
-  catch (err) {
+  } catch (err) {
     return res.status(500).json({
       message: "There was an error with deleting the item.",
       error: err,
