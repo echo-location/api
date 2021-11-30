@@ -7,14 +7,14 @@ const router = Router();
 router.get("/", async (req, res, next) => {
   const users = await models.User.find().catch(next);
   console.log(users);
-  res.json({ message: "Collecting all USERS!", users: users });
+  res.json({ message: "Collecting all USERS!", users: users, success: true });
 });
 
 // [GET] Retrieve specific user
 router.get("/:id", async (req, res, next) => {
   const id = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(id))
-    return res.status(500).json({ message: "Invalid User Object ID!" });
+    return res.status(500).json({ message: "Invalid User Object ID!", success: false });
 
   const user = await models.User.find({ _id: req.params.id }).catch(next);
   console.log(user);
@@ -22,6 +22,7 @@ router.get("/:id", async (req, res, next) => {
     message: "Searching a USER by ID!",
     id: req.params.id,
     user: user,
+    success: true,
   });
 });
 
@@ -40,19 +41,20 @@ router.post("/", async (req, res, next) => {
     if (newUser) {
       console.info("[INFO]: New user added to database.", newUser);
       // newUser.save();
-      return res.status(201).json({ message: "Creating a USER!", user: newUser });
+      return res.status(201).json({ message: "Creating a USER!", user: newUser, success: true });
     }
     return res.status(500).json({
-      message: "There was an error with creating a user!",
+      message: "There was an error with creating a user!", success: false,
     });
   } catch (err) {
     if (err.code === 11000) {
       // console.log(err.index, err.code, err.keyPattern, err.keyValue);
-      return res.status(400).json({ message: "Username already taken." });
+      return res.status(400).json({ message: "Username already taken.", success: false });
     }
     return res.status(500).json({
       error: err,
       message: "There was an error with creating a user!",
+      success: false,
     });
   }
 });
@@ -60,17 +62,17 @@ router.post("/", async (req, res, next) => {
 // [PUT] Update a user's properties (by ID)
 router.put("/:id", async (req, res, next) => {
   const { id: _id } = req.params;
-  const { username } = req.body;
+  const { username, phone, email } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(_id))
-    return res.status(500).json({ message: "Invalid User Object ID!" });
+    return res.status(500).json({ message: "Invalid User Object ID!", success: false, });
 
   const exist = await models.User.exists({ _id: _id }).catch(next);
   if (!exist)
-    return res.status(404).json({ message: "Can't find specified User." });
+    return res.status(404).json({ message: "Can't find specified User.", success: false, });
   try {
     const newUser = await models.User.findByIdAndUpdate(
-      _id, { username: username }, { new: true });
+      _id, { username: username, phone: phone, email: email }, { new: true });
     if (!newUser) {
       return res.status(404).json({
         message: "User not found.",
@@ -93,7 +95,7 @@ router.put("/:id", async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
   const id = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(id))
-    return res.status(500).json({ message: "Invalid User Object ID!" });
+    return res.status(500).json({ message: "Invalid User Object ID!", success: false });
 
   const user = await models.User.deleteOne({ _id: req.params.id }).catch(next);
   res.status(204).json({ message: "Deleting a USER by ID!", user: user });
