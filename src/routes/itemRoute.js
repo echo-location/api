@@ -25,14 +25,22 @@ router.get(
       validator_functions: [],
     },
   ]),
-  async (req, res, next) => {
+  async (req, res) => {
     const queries = req.query;
     console.log(queries);
     let items;
-    if (Object.keys(queries).length === 0)
-      items = await models.Item.find().catch(next);
-    else items = await models.Item.find({ lost: queries.lost }).catch(next);
-    res.json({ message: "Collecting all ITEMS!", items: items });
+    try {
+      if (Object.keys(queries).length === 0)
+        items = await models.Item.find();
+      else
+        items = await models.Item.find({ lost: queries.lost });
+    } catch (err) {
+      return res.status(500).json({
+        message: "An error occurred.",
+        success: false,
+      });
+    }
+    return res.json({ message: "Collecting all ITEMS!", items: items });
   }
 );
 
@@ -50,7 +58,7 @@ router.get(
     {
       param_key: "start_date",
       type: "string",
-      // validator_functions: [(param) => isDateValid(param)],
+      validator_functions: [(param) => isDateValid(param)],
     },
     {
       param_key: "end_date",
@@ -81,11 +89,11 @@ router.get(
           searchFilters.photo = queries.photo === "true" ? { $regex: /./ } : {};
           break;
         case "start_date":
-          if (!(date in searchFilters)) searchFilters.date = {};
+          if (!searchFilters.hasOwnProperty('date')) searchFilters.date = {};
           searchFilters.date.$gte = queries.start_date;
           break;
         case "end_date":
-          if (!(date in searchFilters)) searchFilters.date = {};
+          if (!searchFilters.hasOwnProperty('date')) searchFilters.date = {};
           searchFilters.date.$lte = queries.end_date;
       }
     }
@@ -103,12 +111,12 @@ router.get(
       } catch {
         return res.status(500).json({
           message: "Uh oh! Escaping regex characters for text query failed!",
-          status: false,
+          success: false,
           items: items,
         });
       }
     }
-    res.status(200).json({ message: "Searched for items!", items: items });
+    return res.status(200).json({ message: "Searched for items!", items: items });
   }
 );
 
@@ -123,13 +131,13 @@ router.post(
       validator_functions: [(param) => mongoose.Types.ObjectId.isValid(param)],
     },
   ]),
-  async (req, res, next) => {
+  async (req, res) => {
     const queries = req.query;
 
     // verifying uid
     const userExists = await models.User.exists({ _id: queries.uid });
     if (!userExists) {
-      res.status(404).json({
+      return res.status(404).json({
         message: "Uh oh! This user does not exist!",
         uid: queries.uid,
       });
@@ -280,7 +288,7 @@ router.put("/:id/upload", async (req, res, next) => {
     // verifying uid
     const userExists = await models.User.exists({ _id: queries.uid });
     if (!userExists) {
-      res.status(404).json({
+      return res.status(404).json({
         message: "Uh oh! This user does not exist!",
         uid: queries.uid,
       });
@@ -320,13 +328,13 @@ router.put("/:id/upload", async (req, res, next) => {
         );
 
         if (!newItem) {
-          res.status(404).json({
+          return res.status(404).json({
             message: "Item not found.",
             newItem,
             success: false,
           });
         } else {
-          res.json({
+          return res.json({
             message: "Updating an Item by ID!",
             newItem,
             success: true,
