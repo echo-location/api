@@ -9,7 +9,7 @@ const router = Router();
 router.get("/", async (req, res, next) => {
   const users = await models.User.find().catch(next);
   console.log(users);
-  res.json({ message: "Collecting all USERS!", users: users, success: true });
+  return res.json({ message: "Collecting all USERS!", users: users, success: true });
 });
 
 // [GET] Retrieve specific user
@@ -20,7 +20,7 @@ router.get("/:id", async (req, res, next) => {
 
   const user = await models.User.find({ _id: req.params.id }).catch(next);
   console.log(user);
-  res.json({
+  return res.json({
     message: "Searching a USER by ID!",
     id: req.params.id,
     user: user,
@@ -104,7 +104,7 @@ router.delete("/:id", async (req, res, next) => {
     return res.status(500).json({ message: "Invalid User Object ID!", success: false });
 
   const user = await models.User.deleteOne({ _id: req.params.id }).catch(next);
-  res.status(204).json({ message: "Deleting a USER by ID!", user: user, success: true });
+  return res.status(204).json({ message: "Deleting a USER by ID!", user: user, success: true });
 });
 
 export default router;
