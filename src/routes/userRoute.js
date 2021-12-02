@@ -20,12 +20,12 @@ router.get("/email/:email", async (req, res, next) => {
   const user = await models.User.findOne({ email: req.params.email }).catch(next);
   if (user)
     return res.json({
-      message: "Collecting all USERS!",
-      username: user.username,
+      message: "Found user.",
+      user: user.user,
       success: true,
     });
   return res.status(404).json({
-    message: "Collecting all USERS!",
+    message: "Found no user.",
     success: false,
   });
 });
