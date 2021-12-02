@@ -21,7 +21,7 @@ router.get("/email/:email", async (req, res, next) => {
   if (user)
     return res.json({
       message: "Found user.",
-      user: user.user,
+      user: user,
       success: true,
     });
   return res.status(404).json({
