@@ -21,5 +21,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/", routes.root);
 app.use("/user", routes.user);
 app.use("/item", routes.item);
+app.use("/auth", routes.auth);
 
 export default app;

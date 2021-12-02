@@ -25,6 +25,7 @@ router.get("/:id", async (req, res, next) => {
   });
 });
 
+/*
 // [POST] Create a new user
 router.post("/", async (req, res, next) => {
   //  await mongoose.collection.db.dropCollection('User');
@@ -56,6 +57,7 @@ router.post("/", async (req, res, next) => {
     });
   }
 });
+*/
 
 // [PUT] Update a user's properties (by ID)
 router.put("/:id", async (req, res, next) => {
