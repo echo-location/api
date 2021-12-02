@@ -23,10 +23,13 @@ const createItem = async (userID, item) => {
 const repopulate = async () => {
   const u1 = await createUser({
     username: "jdoe",
+    email: "jdoe@gmail.com",
   });
 
   const u2 = await createUser({
     username: "beilish",
+    email: "beilish@outlook.com",
+    phone: "699-699-6999",
   });
 
   const i1 = await createItem(u1._id, {
@@ -43,21 +46,24 @@ const repopulate = async () => {
     user: u2,
   });
 
-  {
-  }
-
   const i3 = await createItem(u2._id, {
     name: "orange",
     description: "A boring fruit.",
-    location: "330 De Neve, LA",
+    location: "Boelter Hall, Los Angeles, CA",
     user: u2,
+    meta: {
+      coordinates: [34.0691669761001, -118.44330917467173],
+    },
   });
 
   const i4 = await createItem(u2._id, {
     name: "orange",
     description: "A great fruit.",
-    location: "Powell Library, UCLA",
+    location: "UCLA",
     user: u2,
+    meta: {
+      coordinates: [34.0689, 118.4452],
+    },
   });
 
   await u1.save();
