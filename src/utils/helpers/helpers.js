@@ -33,36 +33,42 @@ const repopulate = async () => {
   });
 
   const i1 = await createItem(u1._id, {
-    name: "apple",
-    description: "A glorious fruit.",
-    location: "An apple tree.",
+    name: "Black notebook",
+    description: "70 page notebook used for CS35L",
+    location: "Young Hall 24",
     user: u1,
+    meta: {
+      coordinates: [34.06874719772689, -118.4414202073267],
+    },
   });
 
-  const i2 = await createItem(u2._id, {
-    name: "banana",
-    description: "A disgusting fruit.",
-    location: "Who knows?",
-    user: u2,
+  const i2 = await createItem(u1._id, {
+    name: "iPhone 12 with black case",
+    description: "Found it near salad bar",
+    location: "Bruin Plate",
+    user: u1,
+    meta: {
+      coordinates: [34.07181551814718, -118.44985843682255],
+    },
   });
 
   const i3 = await createItem(u2._id, {
-    name: "orange",
-    description: "A boring fruit.",
-    location: "Boelter Hall, Los Angeles, CA",
+    name: "Airpods",
+    description: "",
+    location: "Pauley Pavillion",
     user: u2,
     meta: {
-      coordinates: [34.0691669761001, -118.44330917467173],
+      coordinates: [34.07057334749834, -118.44688961520164],
     },
   });
 
   const i4 = await createItem(u2._id, {
-    name: "orange",
-    description: "A great fruit.",
-    location: "UCLA",
+    name: "Bruin Card",
+    description: "Message me ID to check",
+    location: "Westwood Movie Theater",
     user: u2,
     meta: {
-      coordinates: [34.0689, 118.4452],
+      coordinates: [34.0627958582108, -118.44681216186402],
     },
   });
 
