@@ -29,10 +29,5 @@ userSchema.statics.findByLogin = async (login) => {
   if (!user) user = await this.findOne({ email: login });
   return user;
 };
-
-// remove all items from deleted user
-userSchema.pre("remove", (next) => {
-  this.model("Item").deleteMany({ user: this_.id }, next);
-});
 const User = mongoose.model("User", userSchema);
 export default User;

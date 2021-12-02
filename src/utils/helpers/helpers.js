@@ -42,22 +42,24 @@ const repopulate = async () => {
     location: "Who knows?",
     user: u2,
   });
+
   {
   }
 
   const i3 = await createItem(u2._id, {
     name: "orange",
     description: "A boring fruit.",
-    location: "In someone's stomach.",
+    location: "330 De Neve, LA",
     user: u2,
   });
 
   const i4 = await createItem(u2._id, {
     name: "orange",
     description: "A great fruit.",
-    location: "In someone else's stomach.",
+    location: "Powell Library, UCLA",
     user: u2,
   });
+
   await u1.save();
   await u2.save();
   await i1.save();
