@@ -2,7 +2,7 @@ import { Router } from "express";
 // import passport from "passport";
 // import { genPassword } from "../utils/helpers/passwordUtils";
 import models from "../models";
-import util from "util";
+// import util from "util";
 
 // import mongoose from "mongoose";
 
@@ -19,17 +19,18 @@ const router = Router();
 });*/
 
 router.post('/register', async (req, res) => {
-  console.log(`Posted to register: ${util.inspect(req.body, false, null, true)}`);
-  console.log(typeof (req.body.password), req.body.password);
-  const { salt, hash } = genPassword(req.body.password); // pw is already hashed, create salt and 2nd hash from it
+  // console.log(`Posted to register: ${util.inspect(req.body, false, null, true)}`);
+  // console.log(typeof (req.body.password), req.body.password);
+  // const { salt, hash } = genPassword(req.body.password); // pw is already hashed, create salt and 2nd hash from it
   const existingUser = await models.User.findOne({ username: req.body.username });
   if (!existingUser) {
     try {
       await models.User.create(new models.User({
         username: req.body.username,
         email: req.body.email,
-        hash: hash,
-        salt: salt,
+        phone: req.body.phone,
+        // hash: hash,
+        // salt: salt,
       }));
       // newUser.save().then((user) => console.log(user));
     } catch (err) {
