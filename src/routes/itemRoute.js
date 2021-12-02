@@ -101,7 +101,7 @@ router.get(
     let items = await models.Item.find(searchFilters).catch(next);
 
     // check for special regex exception
-    if (items === [] && "$text" in searchFilters) {
+    if (Array.isArray(items) && items.length === 0  && "$text" in searchFilters) {
       try {
         // escape special regex chars. $& means the whole matched string
         const re = new RegExp(queries.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
