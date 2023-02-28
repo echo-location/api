@@ -38,7 +38,7 @@
     "express-session": "^1.17.2",
     "file-type": "^16.5.3",
     "firebase": "^9.5.0",
-    "mongoose": "^6.0.12",
+    "mongoose": "^7.0.0",
     "multiparty": "^4.2.2",
     "passport": "^0.5.0",
     "passport-oauth2": "^1.6.1"
